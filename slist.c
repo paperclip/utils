@@ -22,8 +22,8 @@ void slist_free(struct slist *list, void (*cleanup)(void *data))
     while (list) {
         if (list->data)
             cleanup(list->data);
-        free(list);
         struct slist *next = list->next;
+        free(list);
         list = next;
     }
 }
