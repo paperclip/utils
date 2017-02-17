@@ -22,8 +22,6 @@
 #include <net/if_arp.h>
 #include <net/if.h>
 
-#define ADDR_STR_LEN    100
-
 int main(int argc, char **argv)
 {
     if (argc < 2) {
@@ -43,17 +41,16 @@ int main(int argc, char **argv)
     struct {
         struct nlmsghdr nh;
         struct ifinfomsg inf;
-    } req;
-
-    req.nh.nlmsg_len = NLMSG_LENGTH(sizeof(req.inf));
-    req.nh.nlmsg_flags = NLM_F_DUMP | NLM_F_REQUEST;
-    req.nh.nlmsg_type = RTM_GETROUTE;
-    req.nh.nlmsg_seq = 1;
-    req.nh.nlmsg_pid = getpid();
-
-    req.inf.ifi_flags = IFF_UP;
-    req.inf.ifi_family = AF_UNSPEC; /* or AF_INET for v4 or AF_INET6 for v6 */
-    req.inf.ifi_type = ARPHRD_ETHER;
+    } req = {
+        .nh.nlmsg_len = NLMSG_LENGTH(sizeof(req.inf)),
+        .nh.nlmsg_flags = NLM_F_DUMP | NLM_F_REQUEST,
+        .nh.nlmsg_type = RTM_GETROUTE,
+        .nh.nlmsg_seq = 1,
+        .nh.nlmsg_pid = getpid(),
+        .inf.ifi_flags = IFF_UP,
+        .inf.ifi_family = AF_UNSPEC, /* or AF_INET for v4 or AF_INET6 for v6 */
+        .inf.ifi_type = ARPHRD_ETHER,
+    };
 
     send(s, &req, req.nh.nlmsg_len, 0);
 
@@ -62,11 +59,12 @@ int main(int argc, char **argv)
     close(s);
 
     struct {
-        char addr[ADDR_STR_LEN];
+        char addr[INET6_ADDRSTRLEN];
         unsigned int priority;
-    } default_route;
-
-    memset(&default_route, 0, sizeof(default_route));
+    } default_route = {
+        .addr = { 0 },
+        .priority = 0,
+    };
 
     struct nlmsghdr *h = (struct nlmsghdr *)buf;
 
@@ -82,12 +80,15 @@ int main(int argc, char **argv)
 
         struct {
             bool match;
-            char dst[ADDR_STR_LEN];
-            char gateway[ADDR_STR_LEN];
+            char dst[INET6_ADDRSTRLEN];
+            char gateway[INET6_ADDRSTRLEN];
             unsigned int priority;
-        } report;
-
-        memset(&report, 0, sizeof(report));
+        } report = {
+            .match      = false,
+            .dst        = { 0 },
+            .gateway    = { 0 },
+            .priority   = 0,
+        };
 
         /* Parse each attribute */
         for(; RTA_OK(attr, len); attr = RTA_NEXT(attr, len)) {
