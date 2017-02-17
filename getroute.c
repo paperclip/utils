@@ -13,7 +13,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <assert.h>
-#include <asm/types.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <linux/netlink.h>
