@@ -19,6 +19,7 @@
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
 #include <arpa/inet.h>
+#include <net/if_arp.h>
 #include <net/if.h>
 
 #define ADDR_STR_LEN    100
@@ -42,19 +43,22 @@ int main(int argc, char **argv)
     struct {
         struct nlmsghdr nh;
         struct ifinfomsg inf;
-        char data[1024];
     } req;
 
-    req.nh.nlmsg_len = NLMSG_ALIGN(sizeof(req.inf)) +
-        RTA_LENGTH(sizeof(req.data));
+    req.nh.nlmsg_len = NLMSG_LENGTH(sizeof(req.inf));
     req.nh.nlmsg_flags = NLM_F_DUMP | NLM_F_REQUEST;
     req.nh.nlmsg_type = RTM_GETROUTE;
-    req.nh.nlmsg_seq = 0;
+    req.nh.nlmsg_seq = 1;
     req.nh.nlmsg_pid = getpid();
+
+    req.inf.ifi_flags = IFF_UP;
+    req.inf.ifi_family = AF_UNSPEC; /* or AF_INET for v4 or AF_INET6 for v6 */
+    req.inf.ifi_type = ARPHRD_ETHER;
 
     send(s, &req, req.nh.nlmsg_len, 0);
 
-    ssize_t nr = recv(s, req.data, sizeof(req.data), 0);
+    char buf[32768];
+    ssize_t nr = recv(s, buf, sizeof(buf), 0);
     close(s);
 
     struct {
@@ -64,7 +68,7 @@ int main(int argc, char **argv)
 
     memset(&default_route, 0, sizeof(default_route));
 
-    struct nlmsghdr *h = (struct nlmsghdr *)req.data;
+    struct nlmsghdr *h = (struct nlmsghdr *)buf;
 
     /* Parse each message */
     for(; NLMSG_OK(h, nr); h = NLMSG_NEXT(h, nr)) {
