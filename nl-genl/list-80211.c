@@ -26,6 +26,13 @@ static int list_interface_handler(struct nl_msg *msg, void *arg)
     if (tb_msg[NL80211_ATTR_IFNAME])
         printf("Interface: %s\n", nla_get_string(tb_msg[NL80211_ATTR_IFNAME]));
 
+    if (tb_msg[NL80211_ATTR_MAC])
+        printf("MAC: %s\n", nla_get_string(tb_msg[NL80211_ATTR_MAC]));
+
+    if (tb_msg[NL80211_ATTR_KEY_CIPHER])
+        printf("NL80211_ATTR_KEY_CIPHER: %x\n", nla_get_u32(tb_msg[NL80211_ATTR_KEY_CIPHER]));
+
+
     return NL_SKIP;
 }
 
