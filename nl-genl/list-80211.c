@@ -49,7 +49,14 @@ static int list_interface_handler(struct nl_msg *msg, void *arg)
         mac_addr_n2a(mac_addr,nla_get_string(tb_msg[NL80211_ATTR_MAC]));
         printf("MAC: %s\n", mac_addr);
     }
-
+    if (tb_msg[NL80211_ATTR_SSID])
+    {
+        char ssid[33];
+        memcpy(ssid, nla_data(tb_msg[NL80211_ATTR_SSID]),
+            nla_len(tb_msg[NL80211_ATTR_SSID]));
+        ssid[nla_len(tb_msg[NL80211_ATTR_SSID])] = '\0';
+        printf("ssid: %s\n", ssid);
+    }
     if (tb_msg[NL80211_ATTR_KEY_CIPHER])
         printf("NL80211_ATTR_KEY_CIPHER: %x\n", nla_get_u32(tb_msg[NL80211_ATTR_KEY_CIPHER]));
 
