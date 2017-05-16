@@ -15,6 +15,23 @@ static int finish_handler(struct nl_msg *msg, void *arg)
     return NL_SKIP;
 }
 
+void mac_addr_n2a(char *mac_addr, unsigned char *arg) {
+    // From http://git.kernel.org/cgit/linux/kernel/git/jberg/iw.git/tree/util.c.
+    int i, l;
+
+    l = 0;
+    for (i = 0; i < 6; i++) {
+        if (i == 0) {
+            sprintf(mac_addr+l, "%02x", arg[i]);
+            l += 2;
+        } else {
+            sprintf(mac_addr+l, ":%02x", arg[i]);
+            l += 3;
+        }
+    }
+    mac_addr[l] = 0;
+}
+
 static int list_interface_handler(struct nl_msg *msg, void *arg)
 {
     struct nlattr *tb_msg[NL80211_ATTR_MAX + 1];
@@ -27,7 +44,11 @@ static int list_interface_handler(struct nl_msg *msg, void *arg)
         printf("Interface: %s\n", nla_get_string(tb_msg[NL80211_ATTR_IFNAME]));
 
     if (tb_msg[NL80211_ATTR_MAC])
-        printf("MAC: %s\n", nla_get_string(tb_msg[NL80211_ATTR_MAC]));
+    {
+        char mac_addr[20];
+        mac_addr_n2a(mac_addr,nla_get_string(tb_msg[NL80211_ATTR_MAC]));
+        printf("MAC: %s\n", mac_addr);
+    }
 
     if (tb_msg[NL80211_ATTR_KEY_CIPHER])
         printf("NL80211_ATTR_KEY_CIPHER: %x\n", nla_get_u32(tb_msg[NL80211_ATTR_KEY_CIPHER]));
